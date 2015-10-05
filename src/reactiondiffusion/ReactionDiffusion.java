@@ -9,7 +9,8 @@ import javax.swing.JFrame;
  * @author John Fish <john@johnafish.ca>
  */
 public class ReactionDiffusion extends JFrame {
-    int size = 30;
+    int size = 500;
+    public static int windowSize = 500;
     double[][] a = new double[size][size];
     double[][] b = new double[size][size];
     
@@ -23,11 +24,20 @@ public class ReactionDiffusion extends JFrame {
     
     @Override
     public void paint(Graphics g){
-        //Drawing code goes here
+        int cellSize = windowSize/size;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                //bwValue is the colour value of our pixel, pure a is white pure b is black
+                int bwValue = (int) Math.round(128+a[i][j]*127-b[i][j]*127);
+                Color bw = new Color(bwValue,bwValue,bwValue);
+                g.setColor(bw);
+                g.fillRect(i*cellSize, j*cellSize, cellSize, cellSize);
+            }
+        }
     }
     public static void main(String[] args) {
         ReactionDiffusion r = new ReactionDiffusion();
-        r.setSize(500, 500);
+        r.setSize(windowSize, windowSize);
         r.setDefaultCloseOperation( EXIT_ON_CLOSE );
         r.populateInitialArray();
         r.setVisible(true);  //Calls paint
