@@ -2,6 +2,7 @@ package reactiondiffusion;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.swing.JFrame;
 
@@ -9,23 +10,27 @@ import javax.swing.JFrame;
  * @author John Fish <john@johnafish.ca>
  */
 public class ReactionDiffusion extends JFrame {
-    int size = 200;
-    public static int windowSize = 400;
+    int size = 600;
+    public static int windowSize = 600;
     double[][] a = new double[size][size];
     double[][] b = new double[size][size];
     double dA = 1.0;
     double dB = 0.5;
-    double f = 0.0545;
-    double k = 0.062;
+    //Cool (f,k): (.018, .051)
+    double f = .018; 
+    double k = .051;
     double delT = 1.0;
     
     public void populateInitialArray(){
-        int lowerSeed = size/2-10;
-        int upperSeed = size/2+10;
+        int radius = 4;
+        int midX = size/2;
+        int midY = size/2;
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                
-                if (i>lowerSeed && j>lowerSeed && i<upperSeed && j<upperSeed){
+                int delX = i-midX;
+                int delY = j-midY;
+                double distance = Math.sqrt(delX*delX+delY*delY);
+                if (distance<radius){
                     a[i][j] = 1;
                     b[i][j] = 1;
                 } else {
@@ -81,22 +86,29 @@ public class ReactionDiffusion extends JFrame {
     }
     @Override
     public void paint(Graphics g){
+        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB );
+
         int cellSize = windowSize/size;
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 //bwValue is the colour value of our pixel, pure a is white pure b is black
-                int bwValue = (int) Math.round(127 + 127*a[i][j] - 127*b[i][j]);
+                int bwValue = (int) Math.round(128+127*a[i][j] - 127*b[i][j]);
+                if(0>bwValue || 255<bwValue){
+                    System.out.println(a[i][j]+" "+b[i][j]+" "+bwValue);
+                }
                 Color bw = new Color(bwValue,bwValue,bwValue);
-                g.setColor(bw);
-                g.fillRect(i*cellSize, j*cellSize, cellSize, cellSize);
+                img.setRGB(i, j, bw.getRGB());
             }
         }
+        
+        g.drawImage(img, 0, 0, rootPane);
     }
     public static void main(String[] args) throws InterruptedException {
         ReactionDiffusion r = new ReactionDiffusion();
         r.setSize(windowSize, windowSize);
         r.setDefaultCloseOperation( EXIT_ON_CLOSE );
         r.populateInitialArray();
+        r.setUndecorated(true);
         r.setVisible(true);  //Calls paint
         while(true){
             r.nextGeneration();
