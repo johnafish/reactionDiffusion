@@ -9,7 +9,7 @@ import javax.swing.JFrame;
  * @author John Fish <john@johnafish.ca>
  */
 public class ReactionDiffusion extends JFrame {
-    int size = 500;
+    int size = 100;
     public static int windowSize = 500;
     double[][] a = new double[size][size];
     double[][] b = new double[size][size];
@@ -21,7 +21,13 @@ public class ReactionDiffusion extends JFrame {
             }
         }
     }
-    
+    public void nextGeneration(){
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                a[i][j] = ThreadLocalRandom.current().nextDouble();
+            }
+        }
+    }
     @Override
     public void paint(Graphics g){
         int cellSize = windowSize/size;
@@ -41,6 +47,10 @@ public class ReactionDiffusion extends JFrame {
         r.setDefaultCloseOperation( EXIT_ON_CLOSE );
         r.populateInitialArray();
         r.setVisible(true);  //Calls paint
+        while(true){
+            r.nextGeneration();
+            r.repaint();
+        }
     }
 
 }
