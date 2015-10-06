@@ -10,32 +10,44 @@ import javax.swing.JFrame;
  * @author John Fish <john@johnafish.ca>
  */
 public class ReactionDiffusion extends JFrame {
-    int size = 600;
-    public static int windowSize = 600;
-    double[][] a = new double[size][size];
-    double[][] b = new double[size][size];
+    public static int width = 1366;
+    public static int height = 768;
+    double[][] a = new double[width][height];
+    double[][] b = new double[width][height];
     double dA = 1.0;
     double dB = 0.5;
     //Cool (f,k): (.018, .051)
     double f = .018; 
     double k = .051;
     double delT = 1.0;
-    
+    int timeCount = 0;
+    int frameSkip = 1;
     public void populateInitialArray(){
-        int radius = 4;
-        int midX = size/2;
-        int midY = size/2;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        int radius = 12;
+        int midX = width/2;
+        int midY = height/2;
+        boolean circle = false;
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
                 int delX = i-midX;
                 int delY = j-midY;
-                double distance = Math.sqrt(delX*delX+delY*delY);
-                if (distance<radius){
-                    a[i][j] = 1;
-                    b[i][j] = 1;
+                if(circle){
+                    double distance = Math.sqrt(delX*delX+delY*delY);
+                    if (distance<radius){
+                        a[i][j] = 0;
+                        b[i][j] = 1;
+                    } else {
+                        a[i][j] = 1;
+                        b[i][j] = 0;
+                    }
                 } else {
-                    a[i][j] = 1;
-                    b[i][j] = 0;
+                    if (delX>-radius && delX<radius && delY>-radius &&delY<radius){
+                        a[i][j] = 1;
+                        b[i][j] = 1;
+                    }else {
+                        a[i][j] = 1;
+                        b[i][j] = 0;
+                    }
                 }
             }
         }
@@ -50,7 +62,7 @@ public class ReactionDiffusion extends JFrame {
                 for (int j = 0; j < 3; j++) {
                     int xPos = x+(i-1);
                     int yPos = y+(j-1);
-                    if (0<=xPos && xPos<size && 0<=yPos && yPos<size){
+                    if (0<=xPos && xPos<width && 0<=yPos && yPos<height){
                         sum += laplacian[i][j]*a[xPos][yPos];
                     }
                 }
@@ -60,7 +72,7 @@ public class ReactionDiffusion extends JFrame {
                 for (int j = 0; j < 3; j++) {
                     int xPos = x+(i-1);
                     int yPos = y+(j-1);
-                    if (0<=xPos && xPos<size && 0<=yPos && yPos<size){
+                    if (0<=xPos && xPos<width && 0<=yPos && yPos<height){
                         sum += laplacian[i][j]*b[xPos][yPos];
                     }
                 }
@@ -70,10 +82,10 @@ public class ReactionDiffusion extends JFrame {
     }
     
     public void nextGeneration(){
-        double[][] aN = new double[size][size];
-        double[][] bN = new double[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        double[][] aN = new double[width][height];
+        double[][] bN = new double[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
                 double aP = a[i][j];
                 double bP = b[i][j];
                 double reaction = aP*bP*bP;
@@ -86,26 +98,25 @@ public class ReactionDiffusion extends JFrame {
     }
     @Override
     public void paint(Graphics g){
-        BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB );
+        timeCount++;
+        if (timeCount%frameSkip==0){
+            BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB );
 
-        int cellSize = windowSize/size;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                //bwValue is the colour value of our pixel, pure a is white pure b is black
-                int bwValue = (int) Math.round(128+127*a[i][j] - 127*b[i][j]);
-                if(0>bwValue || 255<bwValue){
-                    System.out.println(a[i][j]+" "+b[i][j]+" "+bwValue);
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    //bwValue is the colour value of our pixel, pure a is white pure b is black
+                    int bwValue = (int) Math.round(128+127*a[i][j] - 127*b[i][j]);
+                    Color bw = new Color((int)Math.round(55*a[i][j]),(int)Math.round(55*b[i][j]),0);
+                    img.setRGB(i, j, bw.getRGB());
                 }
-                Color bw = new Color(bwValue,bwValue,bwValue);
-                img.setRGB(i, j, bw.getRGB());
             }
+
+            g.drawImage(img, 0, 0, rootPane);
         }
-        
-        g.drawImage(img, 0, 0, rootPane);
     }
     public static void main(String[] args) throws InterruptedException {
         ReactionDiffusion r = new ReactionDiffusion();
-        r.setSize(windowSize, windowSize);
+        r.setSize(width, height);
         r.setDefaultCloseOperation( EXIT_ON_CLOSE );
         r.populateInitialArray();
         r.setUndecorated(true);
